@@ -1,7 +1,6 @@
 
 var distanceError = .5 ///unit 
 var rotationError = .2 ///radian
-var stepHeight = 1.5; 
 
 function walk()
 {
@@ -21,6 +20,8 @@ function CCDLegs() {
 
 }
 
+var walkTarget = new THREE.Vector3();
+
 var avg = new THREE.Vector3(); 
 var worldPos = new THREE.Vector3(); 
 var upVector = new THREE.Vector3(0, 1, 0); 
@@ -29,8 +30,8 @@ var rPos = new THREE.Vector3();
 var lPos = new THREE.Vector3(); 
 var diff = new THREE.Vector3(); 
 
-var rPos2 = new THREE.Vector3();  
-var lPos2 = new THREE.Vector3(); 
+// var rPos2 = new THREE.Vector3();  
+// var lPos2 = new THREE.Vector3(); 
 
 
 function moveBody() {
@@ -157,8 +158,8 @@ function moveLegs() {
                 if(p1.distanceTo(p3) > distanceError) {
                     var p2 = p1.clone(); 
                     var p4 = p3.clone(); 
-                    p2.y += stepHeight; 
-                    p3.y += stepHeight; 
+                    p2.y += legs[i].userData.stepHeight; 
+                    p3.y += legs[i].userData.stepHeight; 
                     // p1.y = 0; 
                     // p4.y = 0; 
 

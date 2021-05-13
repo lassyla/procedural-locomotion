@@ -3,7 +3,7 @@ var legModels = {};
 var bodyModels = {}; 
 var terrain; 
 
-loader.load('../models/terrain.gltf', function (gltf) {
+loader.load('models/terrain.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
     terrain = gltf.scene.getObjectByName("Plane"); 
     scene.add(terrain); 
@@ -12,7 +12,7 @@ loader.load('../models/terrain.gltf', function (gltf) {
 });
 
 
-loader.load('../models/body1.gltf', function (gltf) {
+loader.load('models/body1.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
     var body = gltf.scene; 
     body.traverse(function (child) {
@@ -27,9 +27,15 @@ loader.load('../models/body1.gltf', function (gltf) {
     body.userData.canAttach = [0, 1, 1, 1, 1, 1]; 
 
     bodyModels["cylinder"] = body; 
+    newBody("cylinder", 4.5); 
+
+    groundStepTargets(); 
+    updateOffsets(); 
+    matchStepTargets();
+
     
 });
-loader.load('../models/body2.gltf', function (gltf) {
+loader.load('models/body2.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
     var body = gltf.scene; 
     body.traverse(function (child) {
@@ -46,7 +52,7 @@ loader.load('../models/body2.gltf', function (gltf) {
     bodyModels["bean"] = body; 
     
 });
-loader.load('../models/body3.gltf', function (gltf) {
+loader.load('models/body3.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
     var body = gltf.scene; 
     body.traverse(function (child) {
@@ -64,7 +70,7 @@ loader.load('../models/body3.gltf', function (gltf) {
     
 });
 
-loader.load('../models/mesh1.gltf', function (gltf) {
+loader.load('models/mesh1.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
     gltf.scene.traverse(function (child) {
     
@@ -74,7 +80,7 @@ loader.load('../models/mesh1.gltf', function (gltf) {
     legModels["asdfg"] = gltf.scene; 
 });
 
-loader.load('../models/mesh2.gltf', function (gltf) {
+loader.load('models/mesh2.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
     gltf.scene.traverse(function (child) {
     
@@ -83,7 +89,7 @@ loader.load('../models/mesh2.gltf', function (gltf) {
     });
     legModels["twisty"] = gltf.scene; 
 });
-loader.load('../models/mesh3.gltf', function (gltf) {
+loader.load('models/mesh3.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
     gltf.scene.traverse(function (child) {
     
@@ -93,7 +99,7 @@ loader.load('../models/mesh3.gltf', function (gltf) {
     legModels["hands"] = gltf.scene; 
 });
 
-loader.load('../models/leg_chain.gltf', function (gltf) {
+loader.load('models/leg_chain.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
     gltf.scene.traverse(function (child) {
     
@@ -103,7 +109,7 @@ loader.load('../models/leg_chain.gltf', function (gltf) {
     legModels["chain"] = gltf.scene; 
 });
 
-loader.load('../models/leg_basic.gltf', function (gltf) {
+loader.load('models/leg_basic.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
     gltf.scene.traverse(function (child) {
     

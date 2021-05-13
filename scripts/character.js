@@ -9,7 +9,6 @@ var walkSpeed = 10; //unit/sec
 var rotateSpeed = 2.5; //radian/sec
 var cycleLength = .4; //sec
 var cyclePos = 0; 
-var walkTarget;
 
 var targetWalkingPos = new THREE.Vector3();
 var poleStrength = .5; 
@@ -255,6 +254,8 @@ function newLeg(i, attachPoint, zOffset, beginTime, endTime) {
 
     leg.userData.stepOffset = new THREE.Vector3(); 
 
+    leg.userData.model = i; 
+
     setCurrentLeg(leg); 
     
     updateOffsets(); 
@@ -285,15 +286,18 @@ function setCurrentLeg(leg) {
         currentLeg.userData.stepTarget.material = whiteMaterial; 
         currentLeg.userData.attachPoint.material = whiteMaterial; 
 
-        legParams.cycleEnd = currentLeg.userData.cycleEnd; 
-        legParams.cycleStart = currentLeg.userData.cycleStart; 
+        legParams.stepBeginTime = currentLeg.userData.stepBeginTime; 
+        legParams.stepEndTime = currentLeg.userData.stepEndTime; 
         legParams.stepHeight = currentLeg.userData.stepHeight; 
+        legParams.model = currentLeg.userData.model; 
+        // updateDisplay();
     }
     //disable the gui for legs
     else {
 
     }
 
+    // updateDisplay();
 }
 
 function switchLeg(leg, newModel) {

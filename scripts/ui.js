@@ -1,7 +1,7 @@
 
 
 //debugging
-var curveHelpersOn = true; 
+var curveHelpersOn = false; 
 
 //https://threejs.org/docs/#examples/en/controls/DragControls
 const orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -22,10 +22,10 @@ const bodyParams = {
 };
 
 const legParams = {
-    model: "chain",
+    model: "basic",
     stepHeight: 1.5, 
-    cycleStart: .5, 
-    cycleEnd: .9
+    stepBeginTime: .5, 
+    stepEndTime: .9
 
 }
 
@@ -58,7 +58,7 @@ legFolder.add( legParams, 'model', legModelNames ).name( 'body model' ).onChange
         var attachPoint = currentLeg.userData.attachPoint; 
         var zOffset = currentLeg.userData.rootBone.position.z; 
         var beginTime = currentLeg.userData.stepBeginTime; 
-        var endTime = currentLeg.userData.stepBeginTime; 
+        var endTime = currentLeg.userData.stepEndTime; 
         var stepHeight = currentLeg.stepHeight; 
         console.log(beginTime); 
         console.log(endTime); 
@@ -66,17 +66,26 @@ legFolder.add( legParams, 'model', legModelNames ).name( 'body model' ).onChange
         newLeg(this.getValue(), attachPoint, zOffset, beginTime, endTime); 
         currentLeg.stepHeight = stepHeight; 
     }
-});
+}).listen();
 legFolder.add( legParams, 'stepHeight', 0, 3).name( 'step height' ).onChange(function() {
     if(currentLeg) currentLeg.userData.stepHeight = this.getValue(); 
-});;
-legFolder.add( legParams, 'cycleStart', 0, 1).name( 'cycle start' ).onChange(function() {
-    if(currentLeg) currentLeg.userData.cycleStart = this.getValue(); 
-});;
-legFolder.add( legParams, 'cycleEnd', 0, 1).name( 'cycle end' ).onChange(function() {
-    if(currentLeg) currentLeg.userData.cycleEnd = this.getValue(); 
-});;
+}).listen();
+legFolder.add( legParams, 'stepBeginTime', 0, 1).name( 'cycle start' ).onChange(function() {
+    if(currentLeg) currentLeg.userData.stepBeginTime = this.getValue(); 
+}).listen();
+legFolder.add( legParams, 'stepEndTime', 0, 1).name( 'cycle end' ).onChange(function() {
+    if(currentLeg) currentLeg.userData.stepEndTime = this.getValue(); 
+}).listen();
 
+// //https://stackoverflow.com/questions/16166440/refresh-dat-gui-with-new-values
+// function updateDisplay() {
+//     for (var i in gui.__controllers) {
+//         gui.__controllers[i].updateDisplay();
+//     }
+//     for (var f in gui.__folders) {
+//         updateDisplay(gui.__folders[f]);
+//     }
+// }
 
 dragControls.addEventListener('dragstart', function (event) {
     orbitControls.enabled = false; 
@@ -154,7 +163,7 @@ function doubleClick( event ) {
         //TO DO: make this a separate function 
         if (intersects.length > 0){
             targetWalkingPos = intersects[0].point; 
-            walkTarget.position.copy(targetWalkingPos); 
+         //   walkTarget.position.copy(targetWalkingPos); 
 
             targetWalkingAngle = -Math.PI/2 + Math.atan2(targetWalkingPos.x - ghostBody.position.x, targetWalkingPos.z - ghostBody.position.z) ;
             
@@ -183,8 +192,8 @@ function startAnimationMode() {
     playing = true; 
     dragControls.enabled = false; 
     cyclePos = 0; 
-    // hideClickableObjects();
-    // hideSkeletonHelpers(); 
+    hideClickableObjects();
+    hideSkeletonHelpers(); 
 
 }
 
@@ -273,35 +282,15 @@ function hideSkeletonHelpers() {
 document.body.onkeydown = function(e){
     //space
     if(e.keyCode == 32){
-        if(!currentBody){
-            newBody("cylinder", 4.5); 
 
-            walkTarget = new THREE.Mesh(sphereGeometry, greenMaterial); 
-            scene.add(walkTarget); 
-            walkTarget.visible = false; 
-            // newLeg(0, 1, 1, .5, .9); 
-            // newLeg(1, 1, -1, .0, .4); 
-            // newLeg(2, 3, 1, .0, .4); 
-            // newLeg(3, 3, -1, .5, .9); 
-            // newLeg(3, 5, 1, .5, .9); 
-            // newLeg(3, 5, -1, .0, .4); 
-            groundStepTargets(); 
-            updateOffsets(); 
-            matchStepTargets();
-    
-            }
 
     }
 
     //left key
     if(e.keyCode == 37){
-        // if (currentLeg.userData.spinePos > 0) currentLeg.userData.spinePos;
-        // currentBody.userData.helper.bones[currentLeg.userData.spinePos].attach(currentLeg.userData.rootBone);
     }
     //right key
     if(e.keyCode == 39){
-        // if (currentLeg.userData.spinePos < currentBody.userData.helper.bones.length - 1) currentLeg.userData.spinePos++;
-        // currentBody.userData.helper.bones[currentLeg.userData.spinePos].attach(currentLeg.userData.rootBone);
     }
     //up key
     if(e.keyCode == 38){
