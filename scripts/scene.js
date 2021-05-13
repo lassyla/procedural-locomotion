@@ -12,26 +12,42 @@ camera.position.y = 14;
 const canvas = document.getElementById( "c" );
 
 const renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
-renderer.setClearColor( 0xaaaaff, 1 );
+renderer.setClearColor( 0xaaaaaa, 1 );
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 
 const raycaster = new THREE.Raycaster();
+var intersects; 
 const mouse = new THREE.Vector2();
 
 const meshMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, skinning:true });
+const terrainMaterial = new THREE.MeshLambertMaterial({ color: 0x888888, skinning:true, side: THREE.DoubleSide });
+const primaryMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, skinning:true });
+const highlightMaterial = new THREE.MeshLambertMaterial({ color: 0xffffaa, skinning:true });
 
-
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+const directionalLight = new THREE.DirectionalLight(0xffffcc, 0.5);
 scene.add(directionalLight);
-const ambientLight = new THREE.AmbientLight(0x404040);
+directionalLight.position.set(0, 50, 0); 
+directionalLight.castShadow = true;
+
+//expand area where shadows can cast (the entire terrain) 
+directionalLight.shadow.camera.left = -40;  
+directionalLight.shadow.camera.right = 40;  
+directionalLight.shadow.camera.bottom = -40;  
+directionalLight.shadow.camera.top = 40;  
+
+
+const ambientLight = new THREE.AmbientLight(0x403020);
 scene.add(ambientLight);
 
 const planeGeometry = new THREE.PlaneGeometry( 140, 140, 32 );
 
-const plane = new THREE.Mesh( planeGeometry, meshMaterial );
-plane.rotation.x = -Math.PI/2; 
-scene.add( plane );
-camera.lookAt(plane.position); 
+// terrain = new THREE.Mesh( planeGeometry, terrainMaterial );
+// terrain.rotation.x = -Math.PI/2; 
+// terrain.receiveShadow = true; 
+// scene.add( terrain );
+
 
 const objects = []; 
 
@@ -39,24 +55,6 @@ const objects = [];
 var playing = false; 
 var deltaTime;
 
-//https://threejs.org/docs/#examples/en/controls/DragControls
-const orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
-
-const dragControls = new THREE.DragControls(objects, camera, renderer.domElement);
-dragControls.addEventListener('dragstart', function (event) {
-    orbitControls.enabled = false; 
-});
-dragControls.addEventListener('dragend', function (event) {
-    orbitControls.enabled = true; 
-});
-dragControls.addEventListener('drag', function (event) {
-    if(event.object.userData.isHipAttach) {
-        //event.object.getWorldPosition(event.object.userData.leg.userData.rootBone.position; 
-        //TO DO: connect it to the closest bone 
-    }
-    groundStepTargets(); 
-    matchStepTargets()
-});
 
 
 //dragControls.transformGroup = true; 
@@ -75,11 +73,8 @@ function animate() {
     CCDLegs();
 }
 
-//rendering multiple scene code from https://github.com/mrdoob/three.js/blob/master/examples/webgl_multiple_elements.html
 function render() {
-
     renderer.render(scene, camera);
-
 }
 
 animate(); 

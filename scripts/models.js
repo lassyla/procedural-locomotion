@@ -1,99 +1,115 @@
 const loader = new THREE.GLTFLoader(); 
-var legModels = []; 
-var bodyModels = []; 
+var legModels = {}; 
+var bodyModels = {}; 
+var terrain; 
+
+loader.load('../models/terrain.gltf', function (gltf) {
+    //gltf.scene.getObjectByName("Cube").material = meshMaterial;
+    terrain = gltf.scene.getObjectByName("Plane"); 
+    scene.add(terrain); 
+    terrain.material = terrainMaterial;
+    terrain.receiveShadow = true; 
+});
 
 
 loader.load('../models/body1.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
-    bodyModels.push(gltf.scene); 
+    var body = gltf.scene; 
+    body.traverse(function (child) {
+        child.castShadow = true; 
+        child.material = primaryMaterial; 
+    });
+
+    //how far to the side each leg should be for each bone
+    body.userData.zOffsets =  [1, 1, 1, 1, 1, 1]; 
+
+    //whether a leg can be attached to this bone
+    body.userData.canAttach = [0, 1, 1, 1, 1, 1]; 
+
+    bodyModels["cylinder"] = body; 
+    
+});
+loader.load('../models/body2.gltf', function (gltf) {
+    //gltf.scene.getObjectByName("Cube").material = meshMaterial;
+    var body = gltf.scene; 
+    body.traverse(function (child) {
+        child.castShadow = true; 
+        child.material = primaryMaterial; 
+    });
+
+    //how far to the side each leg should be for each bone
+    body.userData.zOffsets =  [1, 1, 1, 1, 1, 1]; 
+
+    //whether a leg can be attached to this bone
+    body.userData.canAttach = [0, 1, 1, 1, 1, 1]; 
+
+    bodyModels["bean"] = body; 
+    
+});
+loader.load('../models/body3.gltf', function (gltf) {
+    //gltf.scene.getObjectByName("Cube").material = meshMaterial;
+    var body = gltf.scene; 
+    body.traverse(function (child) {
+        child.castShadow = true; 
+        child.material = primaryMaterial; 
+    });
+
+    //how far to the side each leg should be for each bone
+    body.userData.zOffsets =  [1, 2.5, 3.5, 3, 2, 1]; 
+
+    //whether a leg can be attached to this bone
+    body.userData.canAttach = [0, 1, 1, 1, 1, 1];  
+
+    bodyModels["wide"] = body; 
+    
 });
 
 loader.load('../models/mesh1.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
-    legModels.push(gltf.scene); 
+    gltf.scene.traverse(function (child) {
+    
+        child.castShadow = true; 
+    
+    });
+    legModels["asdfg"] = gltf.scene; 
 });
 
 loader.load('../models/mesh2.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
-    legModels.push(gltf.scene); 
+    gltf.scene.traverse(function (child) {
+    
+        child.castShadow = true; 
+    
+    });
+    legModels["twisty"] = gltf.scene; 
 });
 loader.load('../models/mesh3.gltf', function (gltf) {
     //gltf.scene.getObjectByName("Cube").material = meshMaterial;
-    legModels.push(gltf.scene); 
-});
-function newBody(i) {
-    //to do: delete old body 
-
-    //const body = cloneGltf(bodyModels[i]).scene.children[0]; 
-    const body = THREE.SkeletonUtils.clone(bodyModels[i]); 
-
-    body.userData.rootBone = body.getObjectByName("Bone"); 
-    body.userData.helper = new THREE.SkeletonHelper(body.userData.rootBone);
-    body.userData.walking = false; 
-
-    return body;
-}
-
-const torusGeometry = new THREE.TorusGeometry( .5, .2, 10, 20 );
-const sphereGeometry = new THREE.SphereGeometry( .5, 32, 32 );
-const whiteMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff,  opacity: 0.5,transparent: true  });
-
-function newLeg(i, boneNum, zOffset, beginTime, endTime, ) {
-    if(!currentBody) {
-        console.log("need a body first"); 
-        return; 
-    }
-    const leg = THREE.SkeletonUtils.clone(legModels[i]); 
-
-    leg.userData.isLeg = true; 
-
-    leg.userData.rootBone = leg.getObjectByName("RootBone"); 
-    leg.userData.helper = new THREE.SkeletonHelper(leg.userData.rootBone);
+    gltf.scene.traverse(function (child) {
     
-    leg.userData.effector = leg.getObjectByName("EndBone"); 
-    leg.userData.currentBone = leg.userData.effector; 
+        child.castShadow = true; 
+    
+    });
+    legModels["hands"] = gltf.scene; 
+});
 
-    leg.userData.ikTarget = new THREE.Object3D();
-    var stepTarget = new THREE.Mesh(sphereGeometry, whiteMaterial);
-    leg.userData.stepTarget = stepTarget;
+loader.load('../models/leg_chain.gltf', function (gltf) {
+    //gltf.scene.getObjectByName("Cube").material = meshMaterial;
+    gltf.scene.traverse(function (child) {
+    
+        child.castShadow = true; 
+        child.material = primaryMaterial;     
+    });
+    legModels["chain"] = gltf.scene; 
+});
 
-    //between 0 and 1, the time in the cycle that a step begins and ends. 
-    leg.userData.stepBeginTime = beginTime; 
-    leg.userData.stepEndTime = endTime; 
+loader.load('../models/leg_basic.gltf', function (gltf) {
+    //gltf.scene.getObjectByName("Cube").material = meshMaterial;
+    gltf.scene.traverse(function (child) {
+    
+        child.castShadow = true; 
+        child.material = primaryMaterial;     
+    });
+    legModels["basic"] = gltf.scene; 
+});
 
-
-    scene.add(leg); 
-   // scene.add(leg.userData.helper); 
-
-    currentBody.userData.helper.bones[boneNum].add(leg.userData.rootBone); 
-    leg.userData.spinePos = 0; 
-    leg.userData.rootBone.rotation.z = Math.PI / -2; 
-    leg.userData.rootBone.position.z += zOffset;
-
-    //add the hip-placement geo where the rootbone is
-    var hipAttach = new THREE.Mesh(sphereGeometry, whiteMaterial);
-    hipAttach.userData.isHipAttach = true; 
-    hipAttach.userData.leg = leg; 
-    leg.userData.hipAttach = hipAttach;
-    //scene.add(hipAttach); 
-    leg.userData.rootBone.getWorldPosition(hipAttach.position); 
-
-
-    //set the targets position to the effector position 
-    leg.userData.effector.getWorldPosition(leg.userData.ikTarget.position);
-    leg.userData.effector.getWorldPosition(leg.userData.stepTarget.position);
-    leg.userData.stepTarget.position.y = 0; 
-    leg.userData.ikTarget.position.y = 0; 
-    leg.userData.stepping = false; 
-
-    currentBody.userData.helper.bones[0].attach(leg.userData.stepTarget); 
-
-    dragControls.getObjects().push(leg.userData.stepTarget); 
-    dragControls.getObjects().push(leg.userData.hipAttach); 
-
-
-    currentLeg = leg; 
-    legs.push(leg); 
-
-    return leg;
-}

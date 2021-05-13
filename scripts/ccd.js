@@ -51,10 +51,11 @@ function CCDStep(leg) {
     cross.crossVectors(v1, v2);
     cross.normalize(); 
     leg.userData.currentBone.rotateOnAxis(cross, angle);
-    leg.userData.currentBone.rotation.x= 0; 
+    // leg.userData.currentBone.rotation.x= 0; 
 
 
     return false;
+    
 }
 function forwardCCD(leg, iterations) {
     if(!leg.userData.currentBone) return false; 
@@ -94,7 +95,7 @@ function bouncingCCD(leg, iterations) {
 
 function clampedCCD(leg, iterations) {
     var angle_limit = .8; 
-    const up = new THREE.Quaternion(0,0,0,1);
+    const upQuaternion = new THREE.Quaternion(0,0,0,1);
 
     if(!leg.userData.currentBone) return false; 
     for(var i = 0; i < iterations; i++){
@@ -104,7 +105,7 @@ function clampedCCD(leg, iterations) {
 
         if(angle > angle_limit) {
             var amt = angle / (angle + angle_limit); 
-            leg.userData.currentBone.quaternion.rotateTowards(up, angle - angle_limit); 
+            leg.userData.currentBone.quaternion.rotateTowards(upQuaternion, angle - angle_limit); 
         }
 
         if(leg.userData.currentBone != leg.userData.rootBone) leg.userData.currentBone = leg.userData.currentBone.parent; 
@@ -132,14 +133,39 @@ function stretchCCD(leg) {
 }
 
 //https://forum.unity.com/threads/ik-chain.40431/
-function poleCCD(leg, iterations) {
-    if(!leg.userData.currentBone) return false; 
-    moveToPole(leg);
+function poleCCD(leg, iterations, poleIterations) {
+    if(!leg.userData.elbowBone || !leg.userData.poleTarget || !leg.userData.currentPoleBone || !leg.userData.currentBone) 
+        return false; 
+    // for(var i = 0; i < poleIterations; i++){
+    //     //make sure the current bone isn't the elbow or the end bone
+    //     if(leg.userData.currentPoleBone == leg.userData.elbowBone || leg.userData.currentPoleBone == leg.userData.effector) 
+    //     leg.userData.currentPoleBone = leg.userData.rootBone.children[0]; 
+    //     else leg.userData.currentPoleBone = leg.userData.currentPoleBone.children[0]; 
+    //     poleStep(leg); 
+            
+            
+    // }
+    var aboveElbow = false; 
     for(var i = 0; i < iterations; i++){
-        if(CCDStep(leg)) return; 
-        if(leg.userData.currentBone != leg.userData.effector) leg.userData.currentBone = leg.userData.currentBone.children[0]; 
-        else leg.userData.currentBone = leg.userData.rootBone.children[0]; 
+        if(aboveElbow) poleStep(leg); 
+        //if(CCDStep(leg)) return; 
+        CCDStep(leg);
+        if(leg.userData.currentBone != leg.userData.effector) {
+            leg.userData.currentBone = leg.userData.currentBone.children[0]; 
+        }
+        else {
+        //    leg.userData.currentBone = leg.userData.rootBone.children[0]; 
+            leg.userData.currentBone = leg.userData.rootBone; 
+            aboveElbow = true; 
+        }
+        if(leg.userData.currentBone == leg.userData.elbowBone) {
+            aboveElbow = false; 
+        }
+        
     }
+
+
+  //  moveToPole(leg);
 }
 
 //points elbow towards pole mesh
@@ -148,7 +174,9 @@ function moveToPole(leg) {
 
     var elbowWorldPos = new THREE.Vector3(); 
     leg.userData.elbowBone.getWorldPosition(elbowWorldPos); 
-    var polePos = leg.userData.poleMesh.position; 
+    var polePos = new THREE.Vector3(); 
+    leg.userData.poleTarget.getWorldPosition(polePos); 
+
     var rootWorldPos =  new THREE.Vector3(); 
     leg.userData.rootBone.getWorldPosition(rootWorldPos); 
 
@@ -170,7 +198,7 @@ function moveToPole(leg) {
 
     var dot = v1.dot(v2);
     var angle = Math.acos(dot);
-    angle = THREE.MathUtils.clamp(angle, -1., 1.);
+    angle = THREE.MathUtils.clamp(angle, -poleStrength, poleStrength);
 
     if(Math.abs(angle) < .001) return false; 
     if(Math.abs(dot) < .00005) return false; 
@@ -182,4 +210,61 @@ function moveToPole(leg) {
     cross.normalize(); 
     leg.userData.rootBone.rotateOnAxis(cross, angle);
 
+}
+
+function poleStep(leg) {
+    //make sure bones are actually loaded
+
+    var elbowWorldPos = new THREE.Vector3(); 
+    leg.userData.elbowBone.getWorldPosition(elbowWorldPos); 
+    var targetWorldPos = new THREE.Vector3(); 
+    leg.userData.poleTarget.getWorldPosition(targetWorldPos); 
+
+    //check if effector is within threshold 
+    if(targetWorldPos.distanceTo(elbowWorldPos) < .01) {
+        return true;
+    }
+
+    var boneWorldPos = new THREE.Vector3(); 
+    leg.userData.currentBone.getWorldPosition(boneWorldPos); 
+
+    var inv = new THREE.Quaternion();
+    leg.userData.currentBone.getWorldQuaternion(inv);
+    inv.invert();
+
+    //normalized vector from current bone to effector
+    var v1 = new THREE.Vector3();
+    v1.subVectors(boneWorldPos, elbowWorldPos);
+    v1.applyQuaternion(inv);
+    v1 = v1.normalize();
+
+    //normalized vector from current bone to target
+    var v2 = new THREE.Vector3();
+    v2.subVectors(boneWorldPos, targetWorldPos);
+    v2.applyQuaternion(inv);
+    v2 = v2.normalize(); 
+
+    //angle between the two vectors
+    var dot = v1.dot(v2);
+    var angle = Math.acos(dot);
+    angle = THREE.MathUtils.clamp(angle, -poleStrength, poleStrength);
+
+    //do not bother if the angle is too small, causes jittering
+    if(Math.abs(angle) < .05) return; 
+
+    //skip if the vectors are perpendicular or parallel
+    if(Math.abs(dot) < .00005) return false; 
+    if(1.0 - Math.abs(dot) < .00001) return false; 
+
+    //axis to rotate over is perpendicular to the two vectors
+    var cross = new THREE.Vector3(); 
+
+    cross.crossVectors(v1, v2);
+    cross.normalize(); 
+    leg.userData.currentBone.rotateOnAxis(cross, angle);
+    // leg.userData.currentBone.rotation.x= 0; 
+
+
+    return false;
+    
 }
